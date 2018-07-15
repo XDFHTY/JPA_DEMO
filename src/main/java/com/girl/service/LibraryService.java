@@ -20,4 +20,6 @@ public interface LibraryService {
 
     void update(String id, Novel novel);
 
+    public void CreateIndexAndMapping() throws Exception;
+
 }

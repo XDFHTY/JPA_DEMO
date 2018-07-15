@@ -5,12 +5,15 @@ import com.girl.form.Novel;
 import com.girl.service.LibraryService;
 import com.girl.utils.ResultUtils;
 import com.girl.vo.Result;
+import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.elasticsearch.common.xcontent.XContentFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -81,6 +84,13 @@ public class LibraryController {
         }
         libraryService.update(id, novel);
         return ResultUtils.success(libraryService.get(id));
+    }
+
+
+
+    @PostMapping("/addMapping")
+    public void addMapping() throws Exception {
+        libraryService.CreateIndexAndMapping();
     }
 
 }

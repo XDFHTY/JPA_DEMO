@@ -4,8 +4,11 @@ import com.girl.enums.ResultEnums;
 import com.girl.exception.LibraryException;
 import com.girl.form.Novel;
 import com.girl.service.LibraryService;
+import com.oracle.xmlns.internal.webservices.jaxws_databinding.JavaWsdlMappingType;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
+import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
+import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexResponse;
@@ -17,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -40,6 +44,7 @@ public class LibraryServiceImpl implements LibraryService {
     public Map<String, Object> get(String id) {
         this.checkId(id);
         GetResponse result = client.prepareGet("book", "novel", id).get();
+
         if( !result.isExists()){
             throw new LibraryException(ResultEnums.NOVEL_NOT_EXIST);
         }
@@ -47,6 +52,8 @@ public class LibraryServiceImpl implements LibraryService {
     }
 
     int i = 0;
+
+    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     /**
      * 添加的方法
      * @param novel
@@ -58,11 +65,12 @@ public class LibraryServiceImpl implements LibraryService {
         try {
             //构建数据
             XContentBuilder content = XContentFactory.jsonBuilder()
+
                     .startObject()
                     .field("title", novel.getTitle())
                     .field("author", novel.getAuthor())
                     .field("word_count", novel.getWordCount())
-                    .field("publish_date", novel.getPublishDate().getTime())
+                    .field("publish_date", novel.getPublishDate())
                     .endObject();//构建结束
 
             //构建索引
@@ -128,6 +136,31 @@ public class LibraryServiceImpl implements LibraryService {
         if(StringUtils.isBlank(id)){
             throw new LibraryException(ResultEnums.ID_IS_BLANK);
         }
+    }
+
+    private final static String article="book";
+    private final static String content="content";
+    /**
+     * 创建索引并添加映射
+     * @throws IOException
+     */
+    @Override
+    public void CreateIndexAndMapping() throws Exception{
+
+        CreateIndexRequestBuilder cib=client.admin().indices().prepareCreate("book");
+        XContentBuilder mapping = XContentFactory.jsonBuilder()
+                .startObject()
+                .startObject("properties") //设置之定义字段
+                //设置数据类型
+                .startObject("title").field("type","string").endObject()
+                .startObject("author").field("type","string").endObject()
+                .startObject("word_count").field("type","integer").endObject()
+                .startObject("publish_date").field("type","date").endObject()
+                .endObject()
+                .endObject();
+        cib.addMapping(content, mapping);
+        CreateIndexResponse res=cib.execute().actionGet();
+        System.out.println("----------添加映射(表结构)成功----------");
     }
 
 }
