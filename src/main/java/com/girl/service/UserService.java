@@ -20,6 +20,11 @@ public class UserService {
     @Resource
     private UserDao userDao;
 
+    //查询角色权限列表
+    public void findPower(){
+        System.out.println("======开机启动查询角色权限列表Service");
+    }
+
 
     //查询所有
     public Iterable<User> findListUser(Sort sort){
